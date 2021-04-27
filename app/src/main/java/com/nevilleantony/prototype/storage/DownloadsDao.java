@@ -8,27 +8,36 @@ import java.util.List;
 
 @Dao
 public interface DownloadsDao{
+
     @Query("SELECT * from downloads")
     List<DownloadsModel> getAll();
 
     @Query("SELECT id from downloads")
     List<String> retrieveId();
 
-    @Query("SELECT file_url from downloads")
-    List<String> retrieveUrl();
+    @Query("SELECT range from downloads")
+    List<String> retrieveRange();
 
-    @Query("Select range from downloads where id = :groupId and file_url = :FileDownloadUrl")
-    List<Long> retrieveFileRange(String groupId, String FileDownloadUrl);
+    @Query("Select file_url from downloads where id = :groupId and range = :fileRange")
+    List<Long> retrieveFileUrl(String groupId, Long fileRange);
 
-    @Query("Select min_range from downloads where id = :groupId and file_url = :FileDownloadUrl")
-    List<Long> retrieveMinRange(String groupId, String FileDownloadUrl);
+    @Query("Select min_range from downloads where id = :groupId and range = :fileRange")
+    List<Long> retrieveMinRange(String groupId, Long fileRange);
 
-    @Query("Select max_range from downloads where id = :groupId and file_url = :FileDownloadUrl")
-    List<Long> retrieveMaxRange(String groupId, String FileDownloadUrl);
+    @Query("Select max_range from downloads where id = :groupId and range = :fileRange")
+    List<Long> retrieveMaxRange(String groupId, Long fileRange);
+
+    @Query("update downloads set min_range =: minRange where id = :groupId and range = :Drange")
+    void updateMinRange(String groupId, Long fileRange, Long minRange);
+
+
+    @Query("update downloads set max_range =: maxRange where id = :groupId and range = :fileRange")
+    void updateMaxRange(String groupId, Long fileRange, Long maxRange);
 
     @Insert
     void insertDownloads(DownloadsModel downloads);
 
     @Delete
     void deleteDownloads(DownloadsModel downloads);
+
 }
