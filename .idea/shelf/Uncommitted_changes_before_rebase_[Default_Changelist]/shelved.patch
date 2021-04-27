@@ -1,0 +1,75 @@
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>apply plugin: 'com.android.application'\r\n\r\nandroid {\r\n    compileSdkVersion 30\r\n    buildToolsVersion \"30.0.2\"\r\n\r\n//  For proper de-sugaring of some libraries\r\n    compileOptions {\r\n        sourceCompatibility JavaVersion.VERSION_1_8\r\n        targetCompatibility JavaVersion.VERSION_1_8\r\n    }\r\n\r\n//    In case I use kotlin later\r\n//    kotlinOptions {\r\n//        jvmTarget = \"1.8\"\r\n//    }\r\n\r\n    defaultConfig {\r\n        applicationId \"com.nevilleantony.prototype\"\r\n        minSdkVersion 27\r\n        targetSdkVersion 30\r\n        versionCode 1\r\n        versionName \"1.0\"\r\n\r\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            minifyEnabled false\r\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\r\n        }\r\n    }\r\n}\r\n\r\ndependencies {\r\n    implementation fileTree(dir: \"libs\", include: [\"*.jar\"])\r\n    implementation \"androidx.fragment:fragment:1.3.2\"\r\n    implementation \"androidx.activity:activity:1.2.2\"\r\n    implementation 'com.google.android.material:material:1.3.0'\r\n    // QRCode libs\r\n    implementation 'com.google.zxing:core:3.4.1'\r\n    implementation 'com.journeyapps:zxing-android-embedded:4.1.0'\r\n    // RxJava, RxBinding\r\n    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'\r\n    implementation 'io.reactivex.rxjava3:rxjava:3.0.3'\r\n    implementation 'com.jakewharton.rxbinding4:rxbinding:4.0.0'\r\n    implementation 'com.jakewharton.rxbinding4:rxbinding-material:4.0.0'\r\n    implementation 'com.jakewharton.rxbinding4:rxbinding-viewpager2:4.0.0'\r\n\r\n    testImplementation 'junit:junit:4.12'\r\n    androidTestImplementation 'androidx.test.ext:junit:1.1.2'\r\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(revision 87a5d131caf73d4e9ffb659c4356c5ab66e714c6)
++++ app/build.gradle	(date 1619489381114)
+@@ -52,4 +52,21 @@
+     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+ 
++    def room_version = "2.3.0"
++
++    implementation "androidx.room:room-runtime:$room_version"
++    annotationProcessor "androidx.room:room-compiler:$room_version"
++
++    // optional - RxJava2 support for Room
++    implementation "androidx.room:room-rxjava2:$room_version"
++
++    // optional - RxJava3 support for Room
++    implementation "androidx.room:room-rxjava3:$room_version"
++
++    // optional - Guava support for Room, including Optional and ListenableFuture
++    implementation "androidx.room:room-guava:$room_version"
++
++    // optional - Test helpers
++    testImplementation "androidx.room:room-testing:$room_version"
++
+ }
+\ No newline at end of file
+Index: app/src/main/java/com/nevilleantony/prototype/storage/DownloadsModel.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.nevilleantony.prototype.storage;\r\n\r\nimport androidx.annotation.NonNull;\r\nimport androidx.room.ColumnInfo;\r\nimport androidx.room.PrimaryKey;\r\nimport androidx.room.Entity;\r\n\r\n//https://github.com/googlecodelabs/android-room-with-a-view/tree/master/app/src/main/java/com/example/android/roomwordssample\r\n@androidx.room.Entity(tableName = \"downloads\")\r\npublic class DownloadsModel {\r\n    //hash of the file_url + timestamp\r\n    /*\r\n        The primary key has to be (id,range) as a user can be reassigned to download different range,\r\n        so to uniquely identify a row we need id, range.\r\n     */\r\n    @PrimaryKey\r\n    @NonNull\r\n    private String id;\r\n    private String file_url;\r\n    @PrimaryKey\r\n    private long range;\r\n    private long min_range;\r\n    private long max_range;\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/nevilleantony/prototype/storage/DownloadsModel.java	(revision 87a5d131caf73d4e9ffb659c4356c5ab66e714c6)
++++ app/src/main/java/com/nevilleantony/prototype/storage/DownloadsModel.java	(date 1619492851671)
+@@ -2,8 +2,12 @@
+ 
+ import androidx.annotation.NonNull;
+ import androidx.room.ColumnInfo;
++import androidx.room.Dao;
+ import androidx.room.PrimaryKey;
+ import androidx.room.Entity;
++import androidx.room.Query;
++
++import java.util.List;
+ 
+ //https://github.com/googlecodelabs/android-room-with-a-view/tree/master/app/src/main/java/com/example/android/roomwordssample
+ @androidx.room.Entity(tableName = "downloads")
+@@ -18,8 +22,17 @@
+     private String id;
+     private String file_url;
+     @PrimaryKey
+-    private long range;
+-    private long min_range;
+-    private long max_range;
++    private Long range;
++    private Long min_range;
++    private Long max_range;
++
+ 
++    DownloadsModel(String id, String file_url, Long range, Long min_range, Long max_range){
++        this.id = id;
++        this.file_url = file_url;
++        this.range = range;
++        this.min_range = min_range;
++        this.max_range = max_range
++    }
+ }
++
