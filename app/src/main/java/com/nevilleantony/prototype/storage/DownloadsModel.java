@@ -27,7 +27,7 @@ public class DownloadsModel {
     private Long max_range;
 
 
-    DownloadsModel(@NonNull String id, String file_url,String file_name,@NonNull Long range, Long min_range, Long max_range){
+    public DownloadsModel(@NonNull String id, String file_url, String file_name, @NonNull Long range, Long min_range, Long max_range){
         this.id = id;
         this.file_url = file_url;
         this.file_name = file_name;

@@ -2,6 +2,7 @@ package com.nevilleantony.prototype.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -9,6 +10,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -17,10 +19,17 @@ import com.jakewharton.rxbinding4.material.RxBottomNavigationView;
 import com.jakewharton.rxbinding4.viewpager2.RxViewPager2;
 import com.nevilleantony.prototype.R;
 import com.nevilleantony.prototype.adapters.ViewPagerAdapter;
+import com.nevilleantony.prototype.background.testdb;
 import com.nevilleantony.prototype.fragments.SampleFragment;
+import com.nevilleantony.prototype.storage.DownloadsDao;
+import com.nevilleantony.prototype.storage.DownloadsDatabase;
+import com.nevilleantony.prototype.storage.DownloadsModel;
+
+import java.util.List;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -78,6 +87,38 @@ public class MainActivity extends AppCompatActivity {
 		disposables.add(disposable);
 
 		viewPager.setAdapter(viewPagerAdapter);
+
+		//trial for db
+		//testdb task = new testdb(getBaseContext());
+		//testdb.runthis();
+
+		//Checking with rx java
+		DownloadsDatabase db = DownloadsDatabase.getInstance(getApplicationContext());
+		Long d = new Long(2L);
+		DownloadsModel file = new DownloadsModel("hersad","helloseda","hisa",d,d,d);
+		db.getDoa().insertDownloads(file).subscribe();
+
+		db.getDoa().retrieveId().subscribe(new Consumer<List<String>>() {
+			@Override
+			public void accept(List<String> strings) throws Exception {
+				handleResponse(strings);
+			}
+		});
+
+		db.getDoa().retrieveFileUrl("hersad",d).subscribe(new Consumer<List<String>>() {
+			@Override
+			public void accept(List<String> f_url) throws Exception {
+				handleThis(f_url);
+			}
+		});
+	}
+
+	private void handleThis(List<String> f_url){
+		Log.d("Set", f_url.toString());
+	}
+	private void handleResponse(List<String> strings){
+		Log.e("hello", strings.toString());
+
 	}
 
 	@Override
