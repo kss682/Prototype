@@ -16,15 +16,9 @@ public class FileDownload {
     private long min_range;
     private long max_range;
     private String location;
-    private int progress;
-    private long downloadedsize;
     HttpURLConnection urlconnection = null;
     FileOutputStream file_output = null;
 
-    FileDownload(){
-        this.progress = 0;
-        this.downloadedsize = 0;
-    }
     public void setFileUrl(String file_url){
         this.file_url = file_url;
     }
@@ -41,32 +35,16 @@ public class FileDownload {
     public void startDownload(){
         //Better file download method to keep track of progress
         String range = String.format("bytes=%d-%d", min_range, max_range);
-        InputStream input = null;
         try{
             URL url = new URL(file_url);
             urlconnection = (HttpURLConnection) url.openConnection();
             urlconnection.setRequestProperty("Range", range);
             urlconnection.connect();
             System.out.println("Response code: " + urlconnection.getResponseCode());
-           // ReadableByteChannel rbc = Channels.newChannel(urlconnection.getInputStream());
+            ReadableByteChannel rbc = Channels.newChannel(urlconnection.getInputStream());
 
-            int filelength = urlconnection.getContentLength();
-            input = urlconnection.getInputStream();
-            //File file = new File("A:/test/file.bin");
-            //Used the file above for testing
             file_output = new FileOutputStream(location, true);
-
-            byte data[] = new byte[1024];
-            long total = 0;
-            int count;
-            while((count=input.read(data))!=-1){
-                total+=count;
-                downloadedsize = total;
-                progress = (int) (total*100/filelength);
-                file_output.write(data,0,count);
-            }
-
-            //file_output.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            file_output.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
             file_output.close();
             urlconnection.disconnect();
         }
@@ -137,9 +115,9 @@ public class FileDownload {
     }
 
     public double getDwnldProgress(){
-        return progress;
+        return 0.0;
     }
     public long getFileSize(){
-        return downloadedsize;
+        return 0;
     }
 }
