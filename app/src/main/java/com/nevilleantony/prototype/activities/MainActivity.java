@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,6 +22,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jakewharton.rxbinding4.material.RxBottomNavigationView;
 import com.jakewharton.rxbinding4.viewpager2.RxViewPager2;
 import com.nevilleantony.prototype.R;
+import com.nevilleantony.prototype.adapters.DownloadsViewAdapter;
 import com.nevilleantony.prototype.adapters.ViewPagerAdapter;
 import com.nevilleantony.prototype.downloadmanager.DownloadRepo;
 import com.nevilleantony.prototype.downloadmanager.FileDownload;
@@ -39,10 +41,22 @@ public class MainActivity extends AppCompatActivity {
     private final CompositeDisposable disposables = new CompositeDisposable();;
     private ViewPager2 viewPager;
     private List<FileDownload> downloadList = new ArrayList<>();
+    private DownloadsListFragment downloadsListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        downloadsListFragment = new DownloadsListFragment();
+        viewPager = findViewById(R.id.view_pager);
+        if(viewPager == null){
+            Log.d("tag", "view pager is null");
+        }
+        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle());
+        viewPagerAdapter.addFragment(downloadsListFragment);
+        viewPagerAdapter.addFragment(SampleFragment.newInstance("Completed Page"));
+        viewPager.setAdapter(viewPagerAdapter);
+
         DownloadRepo downloadRepo = DownloadRepo.getInstance(getApplicationContext());
         downloadRepo.addOnMapChangedCallback(
                 new DownloadRepo.onMapChanged() {
@@ -52,19 +66,22 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onDownloadsMapChanged() {
-                        downloadList.addAll(downloadRepo.getDownloads());
+                    public void onDownloadsMapChanged(){
+                        try{
+                            downloadList.addAll(downloadRepo.getDownloads());
+                            downloadsListFragment.downloadView.setAdapter(new DownloadsViewAdapter(getApplicationContext(), downloadList));
+
+                        }
+                        catch (Exception e){
+                            Log.d("log", "null exception");
+                            e.printStackTrace();
+                        }
                     }
                 }
         );
         downloadRepo.unLoadDb();
-        setContentView(R.layout.activity_main);
 
-        viewPager = findViewById(R.id.view_pager);
-        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle());
 
-        viewPagerAdapter.addFragment(new DownloadsListFragment(downloadList));
-        viewPagerAdapter.addFragment(SampleFragment.newInstance("Completed Page"));
 
         final BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation_bar);
         Disposable disposable = RxBottomNavigationView.itemSelections(bottomNavigationView)
@@ -100,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 });
         disposables.add(disposable);
 
-        viewPager.setAdapter(viewPagerAdapter);
+
 
         permission_request();
     }

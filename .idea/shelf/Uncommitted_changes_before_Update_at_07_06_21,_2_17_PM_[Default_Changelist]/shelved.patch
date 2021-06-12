@@ -1,0 +1,81 @@
+Index: app/src/main/java/com/nevilleantony/prototype/activities/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.nevilleantony.prototype.activities;\n\nimport android.Manifest;\nimport android.content.Intent;\nimport android.content.pm.PackageManager;\nimport android.os.Bundle;\nimport android.view.Menu;\nimport android.view.MenuInflater;\nimport android.view.MenuItem;\nimport android.view.View;\nimport android.widget.Toast;\n\nimport androidx.annotation.NonNull;\nimport androidx.appcompat.app.AppCompatActivity;\nimport androidx.core.content.ContextCompat;\nimport androidx.viewpager2.widget.ViewPager2;\n\nimport com.google.android.material.bottomnavigation.BottomNavigationView;\nimport com.google.android.material.floatingactionbutton.FloatingActionButton;\nimport com.jakewharton.rxbinding4.material.RxBottomNavigationView;\nimport com.jakewharton.rxbinding4.viewpager2.RxViewPager2;\nimport com.nevilleantony.prototype.R;\nimport com.nevilleantony.prototype.adapters.ViewPagerAdapter;\nimport com.nevilleantony.prototype.downloadmanager.DownloadRepo;\nimport com.nevilleantony.prototype.downloadmanager.DownloadService;\nimport com.nevilleantony.prototype.fragments.SampleFragment;\n\nimport io.reactivex.rxjava3.disposables.CompositeDisposable;\nimport io.reactivex.rxjava3.disposables.Disposable;\n\npublic class MainActivity extends AppCompatActivity {\n\n    ViewPager2 viewPager;\n    ViewPagerAdapter viewPagerAdapter;\n    CompositeDisposable disposables;\n\n    public MainActivity() {\n        disposables = new CompositeDisposable();\n    }\n\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        setContentView(R.layout.activity_main);\n\n        viewPager = findViewById(R.id.view_pager);\n        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle());\n\n        viewPagerAdapter.addFragment(SampleFragment.newInstance(\"Downloads Page\"));\n        viewPagerAdapter.addFragment(SampleFragment.newInstance(\"Completed Page\"));\n\n        final BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation_bar);\n        Disposable disposable = RxBottomNavigationView.itemSelections(bottomNavigationView)\n                .subscribe(menuItem -> {\n                    switch (menuItem.getItemId()) {\n                        case R.id.downloads_action:\n                            viewPager.setCurrentItem(0);\n                            break;\n                        case R.id.finished_downloads_action:\n                            viewPager.setCurrentItem(1);\n                            break;\n                    }\n                });\n        disposables.add(disposable);\n\n        disposable = RxViewPager2.pageSelections(viewPager)\n                .skipInitialValue()\n                .subscribe(position -> {\n                    int item_id = R.id.downloads_action;\n                    FloatingActionButton fab = findViewById(R.id.new_download_fab);\n\n                    switch (position) {\n                        case 0:\n                            fab.show();\n                            break;\n                        case 1:\n                            item_id = R.id.finished_downloads_action;\n                            fab.hide();\n                            break;\n                    }\n\n                    bottomNavigationView.getMenu().findItem(item_id).setChecked(true);\n                });\n        disposables.add(disposable);\n\n        viewPager.setAdapter(viewPagerAdapter);\n\n        permission_request();\n\n    }\n\n\n    private void permission_request() {\n        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {\n            Toast toast = Toast.makeText(getApplicationContext(), \"permission granted\", Toast.LENGTH_SHORT);\n            toast.show();\n        } else if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {\n            Toast toast = Toast.makeText(getApplicationContext(), \"permission required to write\", Toast.LENGTH_SHORT);\n            toast.show();\n        } else {\n\n            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);\n        }\n    }\n\n    @Override\n    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {\n        super.onRequestPermissionsResult(requestCode, permissions, grantResults);\n        if (requestCode == 1) {\n            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {\n                Toast toast = Toast.makeText(getApplicationContext(), \"Permission has been granted\", Toast.LENGTH_SHORT);\n                toast.show();\n            } else {\n                Toast toast = Toast.makeText(getApplicationContext(), \"Will not function\", Toast.LENGTH_SHORT);\n                toast.show();\n\n            }\n\n        }\n    }\n\n    @Override\n    public boolean onCreateOptionsMenu(Menu menu) {\n        MenuInflater inflater = getMenuInflater();\n        inflater.inflate(R.menu.settings_menu, menu);\n        return true;\n    }\n\n    @Override\n    public boolean onOptionsItemSelected(MenuItem item) {\n        switch (item.getItemId()) {\n            case R.id.settings_menu:\n                Toast.makeText(MainActivity.this, \"Settings\", Toast.LENGTH_SHORT).show();\n                break;\n            case R.id.help_menu:\n                Toast.makeText(MainActivity.this, \"Help\", Toast.LENGTH_SHORT).show();\n                break;\n        }\n        return true;\n    }\n\n    public void onFABClicked(View view) {\n        Intent intent = new Intent(this, NewDownloadActivity.class);\n        startActivity(intent);\n    }\n\n    @Override\n    protected void onDestroy() {\n        super.onDestroy();\n        disposables.dispose();\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/nevilleantony/prototype/activities/MainActivity.java	(revision 5595ed552d668a6634dbb098c8127e6f257fed71)
++++ app/src/main/java/com/nevilleantony/prototype/activities/MainActivity.java	(date 1623052203621)
+@@ -4,6 +4,7 @@
+ import android.content.Intent;
+ import android.content.pm.PackageManager;
+ import android.os.Bundle;
++import android.util.Log;
+ import android.view.Menu;
+ import android.view.MenuInflater;
+ import android.view.MenuItem;
+@@ -87,6 +88,46 @@
+ 
+         permission_request();
+ 
++        DownloadRepo downloadRepo = DownloadRepo.getInstance(this);
++        downloadRepo.createFileDownload(
++                "103",
++                "https://speed.hetzner.de/100MB.bin",
++                "test103",
++                (long) 1,
++                (long) 0,
++                (long) 100000000,
++                (long) 100000000
++                );
++        downloadRepo.createFileDownload(
++                "105",
++                "https://speed.hetzner.de/100MB.bin",
++                "test105",
++                (long) 2,
++                (long) 0,
++                (long) 100000000,
++                (long) 100000000
++        );
++
++        downloadRepo.createFileDownload(
++                "107",
++                "https://speed.hetzner.de/100MB.bin",
++                "test107",
++                (long) 3,
++                (long) 0,
++                (long) 100000000,
++                (long) 100000000
++        );
++
++        Intent download1 = new Intent(this, DownloadService.class);
++        download1.putExtra("groupId", "103");
++        startService(download1);
++        Log.d("Tag Main Act", "download2");
++        Intent download2 = new Intent(this, DownloadService.class);
++        download2.putExtra("groupId", "105");
++        startService(download2);
++        Intent download3 = new Intent(this, DownloadService.class);
++        download3.putExtra("groupId", "107");
++        startService(download3);
+     }
+ 
+ 
+Index: .idea/runConfigurations.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"RunConfigurationProducerService\">\n    <option name=\"ignoredProducers\">\n      <set>\n        <option value=\"org.jetbrains.plugins.gradle.execution.test.runner.AllInPackageGradleConfigurationProducer\" />\n        <option value=\"org.jetbrains.plugins.gradle.execution.test.runner.TestClassGradleConfigurationProducer\" />\n        <option value=\"org.jetbrains.plugins.gradle.execution.test.runner.TestMethodGradleConfigurationProducer\" />\n      </set>\n    </option>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/runConfigurations.xml	(revision 5595ed552d668a6634dbb098c8127e6f257fed71)
++++ .idea/runConfigurations.xml	(date 1622959724764)
+@@ -3,6 +3,7 @@
+   <component name="RunConfigurationProducerService">
+     <option name="ignoredProducers">
+       <set>
++        <option value="com.android.tools.idea.compose.preview.runconfiguration.ComposePreviewRunConfigurationProducer" />
+         <option value="org.jetbrains.plugins.gradle.execution.test.runner.AllInPackageGradleConfigurationProducer" />
+         <option value="org.jetbrains.plugins.gradle.execution.test.runner.TestClassGradleConfigurationProducer" />
+         <option value="org.jetbrains.plugins.gradle.execution.test.runner.TestMethodGradleConfigurationProducer" />
